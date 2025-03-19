@@ -11,5 +11,4 @@ class Tuile :
 class AnalyseTuile:
     def __init__(self):
 
-class Carte :
-    def __init__(self):
+
