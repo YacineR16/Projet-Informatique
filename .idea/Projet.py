@@ -1,4 +1,5 @@
 import Données osm as d
+import os
 
 class Tuile :
     def __init__(self,lat,lon,zoom,path):
