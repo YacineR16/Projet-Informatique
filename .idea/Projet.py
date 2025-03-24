@@ -1,4 +1,4 @@
-import Données osm as d
+import Donnees_osm as d
 import os
 
 class Tuile :
