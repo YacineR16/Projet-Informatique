@@ -131,7 +131,6 @@ class Analyseur:
         couleur = tuple(moyenne.astype(int))  # arrondi en entier RGB
         return couleur
 
-
 # === Fonction d’animation Pygame === réalise avec chatgpt
 def animation(drone):
     def numpy_to_surface(array):

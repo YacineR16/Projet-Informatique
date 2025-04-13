@@ -1,7 +1,8 @@
 import xmltodict
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
-import Données OSM as d
+import Donnees_osm as d
 import os
+import Code Eleanore
 
 class Tuile :
     def __init__(self,lat,lon,zoom,path):
@@ -10,9 +11,8 @@ class Tuile :
         self.zoom=zoom
         self.path=path
 
-
     def telecharger(self,lat,lon,zoom,path):
-        x_tile, y_tile = latlon_to_tile(lat, lon, zoom)
+        x_tile, y_tile = d.latlon_to_tile(lat, lon, zoom)
 
         # Téléchargement de la tuile
         file_path = os.path.join("tiles/" + path)
@@ -27,7 +27,7 @@ class Carte:
         self.zoom=zoom
 
     def ajouter_tuile(self, tuile):
-        self.tuiles[(tuile.x, tuile.y)] = tuile
+        self.tuile[(tuile.x, tuile.y)] = tuile
 
     #def quadrillage(self,zoom,path):
 
@@ -36,18 +36,18 @@ class Drone:
     def __init__(self,x,y,h,vitesse):
         self.position=(x,y)
         self.altitude=h
-        self.vitesse=vitesse
+        self.vit=vitesse
 
-    def VG(self):
+    def VG(self,x,y):
         self.new_position=(x+1,y)
 
-    def VD(self):
+    def VD(self,x,y):
         self.new_position=(x-1,y)
 
-    def VH(self):
+    def VH(self,x,y):
         self.new_position=(x,y+1)
 
-    def VB(self):
+    def VB(self,x,y):
         self.new_position=(x,y-1)
 
 class AnalyseTuile:
