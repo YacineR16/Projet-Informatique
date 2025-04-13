@@ -1,11 +1,6 @@
-<<<<<<< HEAD
-import Données
+import xmltodict
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
-
-osm as d
-=======
-import Donnees_osm as d
->>>>>>> Projet/master
+import Données OSM as d
 import os
 
 class Tuile :
@@ -34,7 +29,7 @@ class Carte:
     def ajouter_tuile(self, tuile):
         self.tuiles[(tuile.x, tuile.y)] = tuile
 
-    def quadrillage(self,zoom,path):
+    #def quadrillage(self,zoom,path):
 
 
 class Drone:
@@ -81,3 +76,12 @@ class AnalyseTuile:
             return "L'eau est dominante sur la tuile"
         else:
             return "La terre est dominante sur la tuile"
+
+    def point_dinteret(self,tuile,doc_OSM):
+        dico=xmltodict.parse(doc_OSM)
+        Ref=dico[ref]
+        if Ref not in tuile:
+            return None
+        else:
+            print(f"Il y a un point d'interêt qui correspond à {Ref}")
+            
