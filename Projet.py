@@ -2,7 +2,7 @@ import xmltodict
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 import Donnees_osm as d
 import os
-import Code Eleanore
+import Code_Eleanore
 
 class Tuile :
     def __init__(self,lat,lon,zoom,path):

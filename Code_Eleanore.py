@@ -75,7 +75,7 @@ class Drone:
         self.altitude = altitude
         self.carte = carte
 
-#n'a pas fonctionné car fait tout direct au lieu de faire une apparition dynamique de la carte
+#le code n'a pas fonctionné, car il fait tout directement au lieu de faire une apparition dynamique de la carte
     """def vol_automatique(self):
         traite toute la carte par déplacement avec balayage, ici forcément en commençant en (0,0) (voir le main)
         analyseur = Analyseur(self.x, self.y, self.altitude)
@@ -105,7 +105,28 @@ class Drone:
 
         return False
 
-
+    def bouger_selon_la_cote(self):
+        analyseur = Analyseur(self.x, self.y, self.altitude)
+        reponse=analyseur.next_direction(self.altitude,self.x,self.y,self.carte.image)
+        if reponse=="La côte est vertical, il faut aller vers le haut":
+            self.y+=1
+        elif reponse=="La côte est horizontal, il faut aller vers la droite":
+            self.x+=1
+        elif reponse=="La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante":
+            self.y-=1
+            self.x-=1
+        elif reponse=="La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante":
+            self.y+=1
+            self.x-=1
+        elif reponse=="La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante":
+            self.y-=1
+            self.x+=1
+        elif reponse=="La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante":
+            self.y+=1
+            self.x+=1
+        elif reponse=="On est sur la terre ferme, il faut repartir au patch précédent" or reponse=="On est en plein dans l'océan, il faut repartir au patch précédent":
+            pass
+#Je vois pas trop comment le coder mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe)
 
 class Analyseur:
     def __init__(self,x,y,altitude):
@@ -130,6 +151,63 @@ class Analyseur:
         moyenne = patch.mean(axis=(0, 1))  # moyenne des 25 pixels
         couleur = tuple(moyenne.astype(int))  # arrondi en entier RGB
         return couleur
+
+    def couleur_dominante(self, altitude, x, y, image): #Correction du code avec chatGPT parce que problème d'analyse de patch
+        maritime, terrestre = 0, 0
+        taille = self.taille_patch(altitude)
+        demi = taille // 2
+
+        # extrait le patch centré autour de (x, y)
+        patch = image[max(y - demi, 0):min(y + demi + 1, image.shape[0]),
+                max(x - demi, 0):min(x + demi + 1, image.shape[1])]
+
+        # parcours de chaque pixel du patch
+        for i in range(patch.shape[0]):
+            for j in range(patch.shape[1]):
+                r, g, b = patch[i, j]
+                if r < 100 and g < 100 and b > 200:
+                    maritime += 1
+                else:
+                    terrestre += 1
+
+        if maritime > terrestre:
+            return 1
+        else:
+            return 0
+
+    def quatre_cadrans(self,patch,taille):
+        long_mid,large_mid = taille//2,taille//2
+        cadran1 = patch[0:long_mid,0:large_mid]
+        cadran2 = patch[0:long_mid,large_mid:taille]
+        cadran3 = patch[long_mid:taille,0:large_mid]
+        cadran4 = patch[long_mid:taille,large_mid:taille]
+        return cadran1,cadran2,cadran3,cadran4
+
+    def next_direction(self,altitude, x, y, image):
+        taille = self.taille_patch(altitude)
+        demi = taille // 2
+        patch = image[max(y - demi, 0):min(y + demi + 1, image.shape[0]),max(x - demi, 0):min(x + demi + 1, image.shape[1])]
+        cadran1,cadran2,cadran3,cadran4 = self.quatre_cadrans(patch,taille)
+        cas1 = self.couleur_dominante(altitude,x,y,cadran1)
+        cas2 = self.couleur_dominante(altitude,x,y,cadran2)
+        cas3 = self.couleur_dominante(altitude,x,y,cadran3)
+        cas4 = self.couleur_dominante(altitude,x,y,cadran4)
+        if cas1==1 and cas2==1 and cas3==0 and cas4==0:
+            return "La côte est vertical, il faut aller vers le haut"
+        elif cas1==1 and cas2==0 and cas3==1 and cas4==0:
+            return "La côte est horizontal, il faut aller vers la droite"
+        elif cas1==0 and cas2==1 and cas3==1 and cas4==1:
+            return "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante"
+        elif cas1==1 and cas2==0 and cas3==1 and cas4==1:
+            return "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante"
+        elif cas1==1 and cas2==1 and cas3==0 and cas4==1:
+            return "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante"
+        elif cas1==1 and cas2==1 and cas3==1 and cas4==0:
+            return "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante"
+        elif cas1==0 and cas2==0 and cas3==0 and cas4==0:
+            return "On est sur la terre ferme, il faut repartir au patch précédent"
+        elif cas1==1 and cas2==1 and cas3==1 and cas4==1:
+            return "On est en plein dans l'océan, il faut repartir au patch précédent"
 
 # === Fonction d’animation Pygame === réalise avec chatgpt
 def animation(drone):
@@ -164,11 +242,11 @@ def animation(drone):
 # -------- Simulation minimal --------
 if __name__ == "__main__":
     # Charge une image existante
-    image_path = "14_7982_5669.png"  # Ton image OSM
+    image_path = "12_1995_1417.png"  # Ton image OSM
     carte = Carte(image_path)
 
     # Crée un drone qui va se déplacer automatiquement
-    drone = Drone(x=0, y=0, altitude="moyenne", carte=carte)
+    drone = Drone(x=0, y=0, altitude="basse", carte=carte)
 
     # Lance l'animation avec Pygame
     animation(drone)
