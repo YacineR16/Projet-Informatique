@@ -77,11 +77,11 @@ class AnalyseTuile:
         else:
             return "La terre est dominante sur la tuile"
 
-    def point_dinteret(self,tuile,doc_OSM):
-        dico=xmltodict.parse(doc_OSM)
-        Ref=dico[ref]
-        if Ref not in tuile:
-            return None
-        else:
-            print(f"Il y a un point d'interêt qui correspond à {Ref}")
+    #def point_dinteret(self,tuile,doc_OSM):
+        #dico=xmltodict.parse(doc_OSM)
+        #Ref=dico[ref]
+        #if Ref not in tuile:
+        #    return None
+        #else:
+        #    print(f"Il y a un point d'interêt qui correspond à {Ref}")
             
