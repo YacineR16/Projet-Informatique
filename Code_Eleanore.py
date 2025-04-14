@@ -126,7 +126,7 @@ class Drone:
             self.x+=1
         elif reponse=="On est sur la terre ferme, il faut repartir au patch précédent" or reponse=="On est en plein dans l'océan, il faut repartir au patch précédent":
             pass
-#Je vois pas trop comment le coder mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe)
+#Je ne vois pas trop comment le coder, mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe).
 
 class Analyseur:
     def __init__(self,x,y,altitude):
