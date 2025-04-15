@@ -72,8 +72,8 @@ if __name__ == "__main__":
     path = args.path"""
 
     # Exemple de test direct dans le code
-    lat,lon = 48.38125,-4.60928
-    zoom = 14
+    lat,lon = 48.378947,-4.501734
+    zoom = 17
     path = "brest"
 
     try:
