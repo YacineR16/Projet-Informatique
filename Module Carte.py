@@ -51,8 +51,8 @@ class Environnement:
     """donne le numéro de toutes les tuiles de la zone à cartographier
     utile pour retrouver le nom de l'image enregistre et pour le tableau SQL"""
     def tuiles_zone(self,lat_min, lat_max, lon_min, lon_max, zoom):
-        x_min, y_max = donnes_osm.latlon_to_tile(lat_min, lon_min, zoom)
-        x_max, y_min = donnees_osm.latlon_to_tile(lat_max, lon_max, zoom)
+        x_min, y_max = Donnees_osm.latlon_to_tile(lat_min, lon_min, zoom)
+        x_max, y_min = Donnees_osm.latlon_to_tile(lat_max, lon_max, zoom)
 
         tuiles = []
         for x in range(x_min, x_max + 1):
@@ -136,6 +136,28 @@ class Drone:
 
         return False
 
+        def bouger_selon_la_cote(self):
+            analyseur = Analyseur(self.x, self.y, self.altitude)
+            reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
+            if reponse == "La côte est vertical, il faut aller vers le haut":
+                self.y += 1
+            elif reponse == "La côte est horizontal, il faut aller vers la droite":
+                self.x += 1
+            elif reponse == "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante":
+                self.y -= 1
+                self.x -= 1
+            elif reponse == "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante":
+                self.y += 1
+                self.x -= 1
+            elif reponse == "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante":
+                self.y -= 1
+                self.x += 1
+            elif reponse == "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante":
+                self.y += 1
+                self.x += 1
+            elif reponse == "On est sur la terre ferme, il faut repartir au patch précédent" or reponse == "On est en plein dans l'océan, il faut repartir au patch précédent":
+                pass
+    # Je ne vois pas trop comment le coder, mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe).
 
 
 class Analyseur:
