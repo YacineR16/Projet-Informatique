@@ -136,27 +136,27 @@ class Drone:
 
         return False
 
-        def bouger_selon_la_cote(self):
-            analyseur = Analyseur(self.x, self.y, self.altitude)
-            reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
-            if reponse == "La côte est vertical, il faut aller vers le haut":
-                self.y += 1
-            elif reponse == "La côte est horizontal, il faut aller vers la droite":
-                self.x += 1
-            elif reponse == "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante":
-                self.y -= 1
-                self.x -= 1
-            elif reponse == "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante":
-                self.y += 1
-                self.x -= 1
-            elif reponse == "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante":
-                self.y -= 1
-                self.x += 1
-            elif reponse == "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante":
-                self.y += 1
-                self.x += 1
-            elif reponse == "On est sur la terre ferme, il faut repartir au patch précédent" or reponse == "On est en plein dans l'océan, il faut repartir au patch précédent":
-                pass
+    def bouger_selon_la_cote(self):
+        analyseur = Analyseur(self.x, self.y, self.altitude)
+        reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
+        if reponse == "La côte est vertical, il faut aller vers le haut":
+            self.y += 1
+        elif reponse == "La côte est horizontal, il faut aller vers la droite":
+            self.x += 1
+        elif reponse == "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante":
+            self.y -= 1
+            self.x -= 1
+        elif reponse == "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante":
+            self.y += 1
+            self.x -= 1
+        elif reponse == "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante":
+            self.y -= 1
+            self.x += 1
+        elif reponse == "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante":
+            self.y += 1
+            self.x += 1
+        elif reponse == "On est sur la terre ferme, il faut repartir au patch précédent" or reponse == "On est en plein dans l'océan, il faut repartir au patch précédent":
+            pass
     # Je ne vois pas trop comment le coder, mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe).
 
 
