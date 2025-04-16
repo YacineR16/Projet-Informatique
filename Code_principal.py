@@ -239,7 +239,7 @@ class Analyseur:
             return "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante"
         elif cas1 == 0 and cas2 == 0 and cas3 == 0 and cas4 == 0:
             return "On est sur la terre ferme, il faut repartir au patch précédent"
-        elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1:
+        else:
             return "On est en plein dans l'océan, il faut repartir au patch précédent"
 
 class Tuile :
