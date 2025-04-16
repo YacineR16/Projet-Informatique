@@ -16,7 +16,7 @@ taille_tuile=256 #pixels
 
 """class qui délimite la zone à cartographiée en récupérant l'image sur OSM qui retourne une image.png 
 = représente la mission complète du drone
-peut etre à renommer en Mission"""
+peut être à renommer en Mission"""
 class Environnement:
     def __init__(self, lat_min, lon_min, lat_max, lon_max, zoom,altitude,mode_vol):
         self.lat_min = lat_min
@@ -106,7 +106,7 @@ class Drone:
         self.altitude = altitude
         self.carte = carte
 
-#n'a pas fonctionné car fait tout direct au lieu de faire une apparition dynamique de la carte
+#Cela n'a pas fonctionné, car fait tout direct au lieu de faire une apparition dynamique de la carte
     """def vol_automatique(self):
         traite toute la carte par déplacement avec balayage, ici forcément en commençant en (0,0) (voir le main)
         analyseur = Analyseur(self.x, self.y, self.altitude)
