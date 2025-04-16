@@ -3,14 +3,13 @@ import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 import osmnx as ox
-
+import os
 import Donnees_osm
-from Donnees_osm import latlon_to_tile
 
 """PIL = bibliothèque Python pour ouvrir, modifier, afficher et enregistrer des images"""
 from PIL import Image
 import SQL
-import Donnees_osm
+import Donnees_osm as d
 
 taille_tuile=256 #pixels
 
@@ -243,6 +242,22 @@ class Analyseur:
         elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1:
             return "On est en plein dans l'océan, il faut repartir au patch précédent"
 
+class Tuile :
+    def __init__(self,lat,lon,zoom,path):
+        self.lat=lat
+        self.lon=lon
+        self.zoom=zoom
+        self.path=path
+
+    def telecharger(self,lat,lon,zoom,path):
+        x_tile, y_tile = d.latlon_to_tile(lat, lon, zoom)
+
+        # Téléchargement de la tuile
+        file_path = os.path.join("tiles/" + path)
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        tile_path = d.download_osm_tile(zoom, x_tile, y_tile, file_path)
+        print(f"Tile downloaded and saved to: {tile_path}")
 
 # === Fonction d’animation Pygame === réalise avec chatgpt
 def animation(drone):
