@@ -54,7 +54,7 @@ def inserer_donnees_carte(lat_min,lat_max,lon_min,lon_max,zoom,altitude,mode_vol
     return id_carte
 
 
-def inserer_données_pixel(x, y, R, G, B, altitude, mode_vol, tile_number, id_carte):
+def inserer_donnees_pixel(x, y, R, G, B, altitude, mode_vol, tile_number, id_carte):
     conn = sqlite3.connect('mes_donnes.db')  # Crée ou ouvre un fichier de base de données
     cursor = conn.cursor()  # permet d’exécuter des commandes SQL
     cursor.execute("""INSERT INTO Pixels(x, y, R, G, B, tile_number, id_carte) VALUES (?, ?, ?, ?, ?, ?, ?)""", (x, y, R, G, B, tile_number, id_carte) )
