@@ -8,7 +8,7 @@ def tableau_SQL():
 
     # Création des tables selon la structure définie
     cursor.execute("""
-    CREATE TABLE Cartes (
+    CREATE TABLE IF NOT EXISTS Cartes (
         id_carte       INTEGER PRIMARY KEY,
         lat_min        REAL,
         lat_max        REAL,
@@ -22,7 +22,7 @@ def tableau_SQL():
     )
     """)
     cursor.execute("""
-    CREATE TABLE Pixels (
+    CREATE TABLE IF NOT EXISTS Pixels (
         id_pixel    INTEGER PRIMARY KEY,
         x           INTEGER,
         y           INTEGER,
@@ -37,6 +37,18 @@ def tableau_SQL():
 
     conn.commit()
     conn.close()
+
+def carte_existe_deja(lat_min, lat_max, lon_min, lon_max, zoom, altitude, mode_vol):
+    conn = sqlite3.connect('mes_donnes.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id_carte FROM Cartes
+        WHERE lat_min=? AND lat_max=? AND lon_min=? AND lon_max=?
+          AND zoom=? AND altitude=? AND mode_vol=?
+    """, (lat_min, lat_max, lon_min, lon_max, zoom, altitude, mode_vol))
+    result = cursor.fetchone()
+    conn.close()
+    return result is not None
 
 
 def inserer_donnees_carte(lat_min,lat_max,lon_min,lon_max,zoom,altitude,mode_vol,nb_tuile,tiles_included):
@@ -54,14 +66,32 @@ def inserer_donnees_carte(lat_min,lat_max,lon_min,lon_max,zoom,altitude,mode_vol
     return id_carte
 
 
-def inserer_donnees_pixel(x, y, R, G, B, altitude, mode_vol, tile_number, id_carte):
+def inserer_données_pixel(x, y, R, G, B, altitude, mode_vol, tile_number, id_carte):
     conn = sqlite3.connect('mes_donnes.db')  # Crée ou ouvre un fichier de base de données
     cursor = conn.cursor()  # permet d’exécuter des commandes SQL
-    cursor.execute("""INSERT INTO Pixels(x, y, R, G, B, tile_number, id_carte) VALUES (?, ?, ?, ?, ?, ?, ?)""", (x, y, R, G, B, tile_number, id_carte) )
+    cursor.execute("""
+    INSERT INTO Pixels(x, y, R, G, B, tile_number, id_carte)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (x, y, R, G, B, tile_number, id_carte) )
+
     conn.commit()
     conn.close()
 
 
+def trouver_id_carte(lat_min, lat_max, lon_min, lon_max, zoom, altitude, mode_vol):
+    conn = sqlite3.connect('mes_donnes.db')
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT id_carte FROM Cartes
+    WHERE lat_min=? AND lat_max=? AND lon_min=? AND lon_max=?
+      AND zoom=? AND altitude=? AND mode_vol=?
+    ORDER BY id_carte DESC LIMIT 1
+    """, (lat_min, lat_max, lon_min, lon_max, zoom, altitude, mode_vol))
+
+    result = cursor.fetchone()
+    conn.close()
+    return result[0] if result else None
 
 # demande est un type text qui correspond à "select * from donnees..."
 def lire_donnees(demande):
