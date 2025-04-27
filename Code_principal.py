@@ -118,6 +118,13 @@ class Carte:
         return np.ones((size[0], size[1], 3), dtype=np.uint8) * 255
 
     def color_carte(self, x, y, altitude,mode_vol):
+        """
+        :param x:
+        :param y:
+        :param altitude:
+        :param mode_vol:
+        :return:
+        """
         analyseur = Analyseur(x, y, altitude)
         taille = analyseur.taille_patch(altitude)
         demi = taille // 2
@@ -134,6 +141,10 @@ class Carte:
                                       tile_number=tile_number, id_carte=self.id_carte)
 
     def sauvegarder_image_finale(self, chemin="carte_coloree_par_drone.png"):
+        """
+        :param chemin:
+        :return:
+        """
         image_pil = Image.fromarray(self.carte_blanche)
         image_pil.save(chemin)
         print(f"Carte coloriée enregistrée sous : {chemin}")
