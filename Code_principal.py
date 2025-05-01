@@ -193,27 +193,31 @@ class Drone:
         return False
 
     def bouger_selon_la_cote(self):
+        """""
+        Fonction permettant le suivi du littoral
+        """
         analyseur = Analyseur(self.x, self.y, self.altitude)
         reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
-        if reponse == "La côte est vertical, il faut aller vers le haut":
+        if reponse == "bas":
             self.y += 1
-        elif reponse == "La côte est horizontal, il faut aller vers la droite":
+        elif reponse == "haut":
+            self.y -= 1
+        elif reponse == "gauche":
+            self.x -= 1
+        elif reponse == "droite":
             self.x += 1
-        elif reponse == "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante":
+        elif reponse == "haut/gauche":
             self.y -= 1
             self.x -= 1
-        elif reponse == "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante":
+        elif reponse == "bas/gauche":
             self.y += 1
             self.x -= 1
-        elif reponse == "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante":
+        elif reponse == "haut/droite":
             self.y -= 1
             self.x += 1
-        elif reponse == "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante":
+        elif reponse == "bas/droite":
             self.y += 1
             self.x += 1
-        elif reponse == "On est sur la terre ferme, il faut repartir au patch précédent" or reponse == "On est en plein dans l'océan, il faut repartir au patch précédent":
-            pass
-    # Je ne vois pas trop comment le coder, mais je voudrais faire déplacer les coordonnées aux valeurs précédentes (ce serait presque un appel récursif en quelque sorte ou dans le même délire que les parcours de graphe).
 
 
 class Analyseur:
@@ -283,22 +287,36 @@ class Analyseur:
         cas3 = self.couleur_dominante(altitude, x, y, cadran3)
         cas4 = self.couleur_dominante(altitude, x, y, cadran4)
         if cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 0:
-            return "La côte est vertical, il faut aller vers le haut"
+            return "droite"
         elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 0:
-            return "La côte est horizontal, il faut aller vers la droite"
+            return "bas"
         elif cas1 == 0 and cas2 == 1 and cas3 == 1 and cas4 == 1:
-            return "La côte est en bas à gauche du pixel, il faut aller vers la diagonale haut/droite de manière descendante"
+            return "haut/gauche"
         elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 1:
-            return "La côte est en haut à gauche du pixel, il faut aller vers la diagonale haut/gauche de manière ascendante"
+            return "bas/gauche"
         elif cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 1:
-            return "La côte est en bas à droite du pixel, il faut aller vers la diagonale haut/gauche de manière descendante"
+            return "haut/droite"
         elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 0:
-            return "La côte est en haut à droite du pixel, il faut aller vers la diagonale haut/droite de manière ascendante"
-        elif cas1 == 0 and cas2 == 0 and cas3 == 0 and cas4 == 0:
-            return "On est sur la terre ferme, il faut repartir au patch précédent"
-        elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1:
-            return "On est en plein dans l'océan, il faut repartir au patch précédent"
+            return "bas/droite"
+        elif cas1 == 0 and cas2 == 1 and cas3 == 0 and cas4 == 1:
+            return "haut"
+        elif (cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1) or (cas1 == 0 and cas2 == 0 and cas3 ==0 and cas4 == 0):
+            return "bas"
 
+
+## DESIGN PATTERN
+
+class DroneFactory: #Creation du drone avec son mode de vol associé
+    @staticmethod
+    def create_drone(type, x, y, altitude, carte, mode_vol):
+        if type == "Manuel":
+            return Drone(x, y, altitude, carte, "Manuel") #Normalement ce sera la class de Drone qui sera controlable manuellement
+        elif type == "Automatique":
+            return Drone(x, y, altitude, carte, "Automatique")
+        elif type == "Manuel Groupé":
+            pass #On mettra la classe qui permet de créer des groupes de drones en mode manuel
+        elif type== "Automatique Groupé":
+            pass #Respectivement pour le groupe de drone en mode automatique
 
 # === Fonction d’animation Pygame === réalise avec chatgpt
 def animation(drone):
