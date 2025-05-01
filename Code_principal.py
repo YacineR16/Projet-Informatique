@@ -308,7 +308,7 @@ class Analyseur:
 
 class DroneFactory: #Creation du drone avec son mode de vol associé
     @staticmethod
-    def create_drone(type, x, y, altitude, carte, mode_vol):
+    def creer_drone(type, x, y, altitude, carte, mode_vol):
         if type == "Manuel":
             return Drone(x, y, altitude, carte, "Manuel") #Normalement ce sera la class de Drone qui sera controlable manuellement
         elif type == "Automatique":
