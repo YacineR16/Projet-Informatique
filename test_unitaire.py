@@ -50,8 +50,8 @@ class testAnalyseur (unittest.TestCase):
         image = np.zeros((5, 5, 3), dtype=np.uint8)
         # Configuration plus claire : quadrants distincts
         image[:2, :2] = [0, 0, 255]  # Bleu en haut à gauche
-        image[2:, 2:] = [0, 0, 255]  # Bleu en bas à droite
-        image[2:, :2] = [255, 0, 0]  # Rouge en bas à gauche
+        image[2:, 2:] = [0, 255, 0]  # Rouge en bas à droite
+        image[2:, :2] = [0, 0, 255]  # Bleu en bas à gauche
         image[:2, 2:] = [255, 0, 0]  # Rouge en haut à droite
         
         analyseur = dccd.Analyseur(2, 2, "basse")
@@ -133,6 +133,44 @@ class testDrone (unittest.TestCase):
         x_avant = drone.x
         drone.deplacement_manuel("droite")
         self.assertGreaterEqual(drone.x, x_avant)
+
+    def test_suivie_cote(self):
+        # Création d'une image test de 10x10 pixels
+        image_test = np.zeros((10, 10, 3), dtype=np.uint8)
+        # Création d'une zone bleue (mer) et rouge (terre) pour simuler une côte
+        image_test[:5, :5] = [0, 0, 255]  # Zone bleue (mer)
+        image_test[5:, 5:] = [255, 0, 0]  # Zone rouge (terre)
+        # Création d'une carte test
+        test_path = "test_image.png"
+        Image.fromarray(image_test).save(test_path)
+        carte_test = dccd.Carte(test_path, 0, 1, 0, 1, 17, "basse", "suivie_cote")
+        # Création du drone test
+        drone_test = dccd.Drone(x=5, y=5, altitude="basse", carte=carte_test, mode_vol="suivie_cote")
+
+        # Position initiale
+        x_initial = drone_test.x
+        y_initial = drone_test.y
+
+        # Test du déplacement
+        drone_test.suivie_cote()
+
+        # Vérification que le drone s'est déplacé
+        self.assertTrue(
+            (drone_test.x != x_initial) or (drone_test.y != y_initial),
+            "Le drone ne s'est pas déplacé"
+        )
+
+        # Vérification que le déplacement est d'une seule unité
+        self.assertTrue(
+            abs(drone_test.x - x_initial) <= 1 and abs(drone_test.y - y_initial) <= 1,
+            "Le déplacement est supérieur à une unité"
+        )
+
+        # Vérification que le drone reste dans les limites de l'image
+        self.assertTrue(
+            0 <= drone_test.x < carte_test.image.shape[1] and 0 <= drone_test.y < carte_test.image.shape[0],
+            "Le drone est sorti des limites de l'image"
+        )
 
 
 class testMissionDrone(unittest.TestCase) :

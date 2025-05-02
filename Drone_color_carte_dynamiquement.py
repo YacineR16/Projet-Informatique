@@ -309,8 +309,8 @@ class Analyseur:
     def quatre_cadrans(self, patch):
         long_mid, large_mid = patch.shape[0] // 2, patch.shape[1] // 2
         cadran1 = patch[0:long_mid, 0:large_mid]
-        cadran2 = patch[0:long_mid, large_mid:]
-        cadran3 = patch[long_mid:, 0:large_mid]
+        cadran2 = patch[long_mid:, 0:large_mid]
+        cadran3 = patch[0:long_mid, large_mid:]
         cadran4 = patch[long_mid:, large_mid:]
         return cadran1, cadran2, cadran3, cadran4
 
