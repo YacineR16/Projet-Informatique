@@ -101,4 +101,3 @@ if __name__ == "__main__":
 
     x_min, x_max, y_min, y_max, dossier = telecharger_zone(lat_min, lat_max, lon_min, lon_max, zoom, dossier="tiles_brest")
     assembler_image(x_min, x_max, y_min, y_max, zoom, dossier)
-

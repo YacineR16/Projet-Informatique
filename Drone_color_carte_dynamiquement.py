@@ -1,13 +1,8 @@
 """permet de voir le coloriage en direct de la carte en fonction du déplacement du drone"""
 import pygame
 import numpy as np
-import matplotlib.pyplot as plt
-import osmnx as ox
 import os
-
 import donnees_osm
-from donnees_osm import latlon_to_tile
-
 """PIL = bibliothèque Python pour ouvrir, modifier, afficher et enregistrer des images"""
 from PIL import Image
 import SQL
@@ -99,6 +94,7 @@ class Environnement:
             SQL.inserer_donnees_carte(self.lat_min, self.lat_max, self.lon_min, self.lon_max, self.zoom,
                                   self.altitude, self.mode_vol, nb_tuile, str(tiles_included))
 
+
 class Carte:
     def __init__(self, nom_image, lat_min, lat_max, lon_min, lon_max, zoom, altitude, mode_vol):
         """nom_image est une chaîne de caractères"""
@@ -118,13 +114,6 @@ class Carte:
         return np.ones((size[0], size[1], 3), dtype=np.uint8) * 255
 
     def color_carte(self, x, y, altitude,mode_vol):
-        """
-        :param x:
-        :param y:
-        :param altitude:
-        :param mode_vol:
-        :return:
-        """
         analyseur = Analyseur(x, y, altitude)
         taille = analyseur.taille_patch(altitude)
         demi = taille // 2
@@ -141,10 +130,6 @@ class Carte:
                                       tile_number=tile_number, id_carte=self.id_carte)
 
     def sauvegarder_image_finale(self, chemin="carte_coloree_par_drone.png"):
-        """
-        :param chemin:
-        :return:
-        """
         image_pil = Image.fromarray(self.carte_blanche)
         image_pil.save(chemin)
         print(f"Carte coloriée enregistrée sous : {chemin}")
@@ -153,7 +138,6 @@ class Carte:
 """Seul 3 altitudes pourront être choisi : basse, moyenne,  qui définiront les tailles des patch analysés"""
 """ basse : 5x5 ; moyenne : 15x15 ; haute : 30x30 pixel"""
 """ici x et y sont les coordonnées dans la matrice avec en haut à gauche le point (x=0,y=0)"""
-
 class Drone:
     def __init__(self,x,y,altitude,carte,mode_vol):
         self.x = x
@@ -191,6 +175,78 @@ class Drone:
             return True
 
         return False
+
+    def deplacement_manuel(self,direction):
+        analyseur = Analyseur(self.x, self.y, self.altitude)
+        step = analyseur.taille_patch(self.altitude)
+
+        if direction == "droite":
+            self.x=min(self.x + step, self.carte.image.shape[1] - 1)
+            """min entre le nombre de pixel qu'avance le drone (en fonction altitude) et le dernier pixel de la largeur de la carte"""
+
+        if direction == "gauche":
+            self.x = max(self.x - step, 0)
+
+        if direction == "haut":
+            self.y = max(self.y - step, 0)
+
+        if direction == "bas":
+            self.y = min(self.y + step, self.carte.image.shape[0] - 1)
+
+    """déplacer le drone manuellement (flèches), visualiser ce qu'il voit sur la carte OSM, 
+    colorier une carte blanche avec ce qu'il perçoit, afficher tout ça en temps réel."""
+    def vol_manuel(self):
+        pygame.init()
+
+        """Crée deux surfaces Pygame à partir de l'image OSM et la carte blanche"""
+        surface_osm = pygame.surfarray.make_surface(np.transpose(self.carte.image, (1, 0, 2)))
+        surface_blanche = pygame.surfarray.make_surface(np.transpose(self.carte.carte_blanche, (1, 0, 2)))
+
+        """Crée une fenêtre graphique : deux fois la largeur de la carte (OSM à gauche, carte blanche à droite) 
+        et même hauteur que l’image."""
+        largeur, hauteur = surface_osm.get_size()
+        fenetre = pygame.display.set_mode((largeur * 2, hauteur))
+        """permet de réguler le nombre d'image afficher à la seconde"""
+        clock = pygame.time.Clock()
+
+        running = True
+        while running: #tourne jusqu'à fermeture de la carte
+            fenetre.fill((0, 0, 0)) # pour effacer la position du drone précédente
+            for event in pygame.event.get(): #  la base du contrôle des événements dans Pygame : permet la fermeture du programme
+                if event.type == pygame.QUIT:
+                    running = False
+
+            keys = pygame.key.get_pressed() # modélise les touches enfoncées
+
+            if keys[pygame.K_RIGHT]: # valeur de la touche enfoncée et lance le programme déplacer correspondant
+                self.deplacement_manuel("droite")
+            if keys[pygame.K_LEFT]:
+                self.deplacement_manuel("gauche")
+            if keys[pygame.K_DOWN]:
+                self.deplacement_manuel("bas")
+            if keys[pygame.K_UP]:
+                self.deplacement_manuel("haut")
+
+            """ Observer ce que voit le drone et colorier"""
+            self.carte.color_carte(self.x, self.y, self.altitude, self.mode_vol)
+
+            """Mise à jour des surfaces"""
+            surface_osm =pygame.surfarray.make_surface(np.transpose(self.carte.image, (1, 0, 2)))
+            surface_blanche = pygame.surfarray.make_surface(np.transpose(self.carte.carte_blanche, (1, 0, 2)))
+
+            """ Affiche les 2 surfaces créées avant sur la fenêtre"""
+            fenetre.blit(surface_osm, (0, 0))
+            fenetre.blit(surface_blanche, (largeur, 0))
+
+            """Afficher rectangle autour du drone (zone de vision)"""
+            analyseur = Analyseur(self.x, self.y, self.altitude)
+            step = analyseur.taille_patch(self.altitude)
+            pygame.draw.rect(fenetre, (255, 0, 0), (self.x, self.y, step, step), 2) #pour la vision du drone
+
+            pygame.display.flip() # met à jour l'écran
+            clock.tick(10)
+
+        pygame.quit()
 
     def bouger_selon_la_cote(self):
         """""
@@ -300,9 +356,9 @@ class Analyseur:
             return "bas/droite"
         elif cas1 == 0 and cas2 == 1 and cas3 == 0 and cas4 == 1:
             return "haut"
-        elif (cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1) or (cas1 == 0 and cas2 == 0 and cas3 ==0 and cas4 == 0):
+        elif (cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1) or (
+                cas1 == 0 and cas2 == 0 and cas3 == 0 and cas4 == 0):
             return "bas"
-
 
 ## DESIGN PATTERN
 
@@ -318,7 +374,159 @@ class DroneFactory: #Creation du drone avec son mode de vol associé
         elif type== "Automatique Groupé":
             pass #Respectivement pour le groupe de drone en mode automatique
 
-# === Fonction d’animation Pygame === réalise avec chatgpt
+# mise en place du DSL
+class MissionDrone:
+    def __init__(self):
+        self.mode = None  # "manuel" ou "automatique"
+        self.altitude = None  # "petite" , "moyenne" ou "haute"
+        self.zone = (None, None, None, None)  # pour automatique
+        self.zoom = None  # à choisir mais le mieux 17
+        self.drone = None  # contient le drone actif, qui se déplace, colorie, et enregistre
+        self.carte = None #Contient la carte blanche et l’image source à analyser
+        self.env = None # Contient les données de l'environnement OSM (carte, zone, SQL...)
+
+    # méthodes setter permettant d'affecter une valeur à un attribut interne
+    def set_mode(self, mode):
+        self.mode = mode
+        return self
+
+    def set_altitude(self, altitude):
+        self.altitude = altitude
+        return self
+
+    def set_zone(self, zone):
+        self.zone = zone
+        return self
+
+    def set_zoom(self, zoom):
+        self.zoom = zoom
+        return self
+
+    def set_drone(self, drone):
+        self.drone = drone
+        return self
+
+    def set_carte(self, carte):
+        self.carte = carte
+        return self
+
+    def set_env(self, env):
+        self.env = env
+        return self
+
+
+    def preparer(self):
+        """Configure l'environnement de vol selon le mode choisi."""
+
+        if self.mode == "automatique" and self.zone is not None:
+            # enrionnement créé
+            lat_min, lon_min, lat_max, lon_max = self.zone
+            self.env = Environnement(
+                lat_min=lat_min, lon_min=lon_min,
+                lat_max=lat_max, lon_max=lon_max,
+                zoom=self.zoom,
+                altitude=self.altitude,
+                mode_vol="automatique"
+            )
+
+            # telechargement de la carte OSM
+            self.env.OSM()
+
+            # mission enregistrée dans la table mission
+            self.env.enregistrer_mission()
+
+            # créer la carte
+            self.carte = Carte(
+                self.env.image_path,
+                self.env.lat_min, self.env.lat_max,
+                self.env.lon_min, self.env.lon_max,
+                self.env.zoom,
+                self.env.altitude,
+                "automatique"
+            )
+
+            # créer le drone
+            self.drone = Drone(0, 0, self.altitude, self.carte, "automatique")
+
+
+        elif self.mode == "manuel":
+            # enrionnement créé
+            lat_min, lon_min, lat_max, lon_max = self.zone
+            self.env = Environnement(
+                lat_min=lat_min, lon_min=lon_min,
+                lat_max=lat_max, lon_max=lon_max,
+                zoom=self.zoom,
+                altitude=self.altitude,
+                mode_vol="manuel"
+            )
+
+            # telechargement de la carte OSM
+            self.env.OSM()
+
+            # mission enregistrée dans la table mission
+            self.env.enregistrer_mission()
+
+            # créer la carte
+            self.carte = Carte(
+                self.env.image_path,
+                self.env.lat_min, self.env.lat_max,
+                self.env.lon_min, self.env.lon_max,
+                self.env.zoom,
+                self.env.altitude,
+                "manuel"
+            )
+
+            # créer le drone
+            self.drone = Drone(0, 0, self.altitude, self.carte, "manuel")
+
+        elif self.mode == "suivie_cote":
+            # enrionnement créé
+            lat_min, lon_min, lat_max, lon_max = self.zone
+            self.env = Environnement(
+                lat_min=lat_min, lon_min=lon_min,
+                lat_max=lat_max, lon_max=lon_max,
+                zoom=self.zoom,
+                altitude=self.altitude,
+                mode_vol="suivie_cote"
+            )
+
+            # telechargement de la carte OSM
+            self.env.OSM()
+
+            # mission enregistrée dans la table mission
+            self.env.enregistrer_mission()
+
+            # créer la carte
+            self.carte = Carte(
+                self.env.image_path,
+                self.env.lat_min, self.env.lat_max,
+                self.env.lon_min, self.env.lon_max,
+                self.env.zoom,
+                self.env.altitude,
+                "suivie_cote"
+            )
+
+            # créer le drone
+            self.drone = Drone(0, 0, self.altitude, self.carte, "manuel")
+
+        else:
+            raise ValueError("Mode inconnu ou informations incomplètes.")
+
+        return self
+
+    def executer(self):
+        if (self.mode == "manuel"):
+            self.drone.vol_manuel()
+        elif self.mode == "automatique":
+            animation(self.drone)
+        elif self.mode == "suivie_cote":
+            # Tu peux ajouter ici self.drone.suivre_cote() si tu l’implémentes plus tard
+            print("Mode 'suivie_cote' non encore implémenté.")
+        else:
+            raise ValueError("Mode de vol non reconnu.")
+
+
+# animation pygame pour l'automatique
 def animation(drone):
     def numpy_to_surface(array):
         return pygame.surfarray.make_surface(np.transpose(array, (1, 0, 2)))
@@ -348,7 +556,7 @@ def animation(drone):
 
     pygame.quit()
 
-# -------- Simulation minimal --------
+# Simulation
 if __name__ == "__main__":
     # Zone élargie autour de Brest
     lat_min = 48.8560
@@ -356,27 +564,20 @@ if __name__ == "__main__":
     lon_min = 2.3510
     lon_max = 2.3520
     zoom = 17
+    zone = (lat_min, lon_min, lat_max, lon_max)
 
-    env = Environnement(
-        lat_min,lon_min,lat_max,lon_max,zoom,
-        altitude="moyenne",
-        mode_vol="manuel"
-    )
-    env.OSM()
-    env.enregistrer_mission()
+    mission = MissionDrone() \
+        .set_mode("manuel") \
+        .set_altitude("moyenne") \
+        .set_zone(zone) \
+        .set_zoom(zoom) \
+        .preparer() \
 
-    carte = Carte(
-        env.image_path,
-        env.lat_min, env.lat_max, env.lon_min, env.lon_max,
-        env.zoom, env.altitude, env.mode_vol
-    )
-    drone = Drone(0, 0, env.altitude, carte,env.mode_vol)
-    animation(drone)
+    mission.executer()
 
-    # ➕ Enregistrement final
-    carte.sauvegarder_image_finale("resultat_drone.png")
+    # Sauvegarde carte finale
+    mission.carte.sauvegarder_image_finale("carte_coloree_manuel.png")
 
-    #test SQL
+    # Lecture BDD
     SQL.lire_donnees("SELECT * FROM Cartes")
     SQL.lire_donnees("SELECT * FROM Pixels")
-
