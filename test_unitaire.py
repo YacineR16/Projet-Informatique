@@ -146,7 +146,6 @@ class testDrone (unittest.TestCase):
         carte_test = dccd.Carte(test_path, 0, 1, 0, 1, 17, "basse", "suivie_cote")
         # Création du drone test
         drone_test = dccd.Drone(x=5, y=5, altitude="basse", carte=carte_test, mode_vol="suivie_cote")
-
         # Position initiale
         x_initial = drone_test.x
         y_initial = drone_test.y

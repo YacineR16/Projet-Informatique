@@ -246,27 +246,26 @@ class Drone:
         """
         analyseur = Analyseur(self.x, self.y, self.altitude)
         reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
-        step = analyseur.taille_patch(self.altitude)
         if reponse == "bas":
-            self.y += step
+            self.y += 1
         elif reponse == "haut":
-            self.y -= step
+            self.y -= 1
         elif reponse == "gauche":
-            self.x -= step
+            self.x -= 1
         elif reponse == "droite":
-            self.x += step
+            self.x += 1
         elif reponse == "haut/gauche":
-            self.y -= step
-            self.x -= step
+            self.y -= 1
+            self.x -= 1
         elif reponse == "bas/gauche":
-            self.y += step
-            self.x -= step
+            self.y += 1
+            self.x -= 1
         elif reponse == "haut/droite":
-            self.y -= step
-            self.x += step
+            self.y -= 1
+            self.x += 1
         elif reponse == "bas/droite":
-            self.y += step
-            self.x += step
+            self.y += 1
+            self.x += 1
         else:
             print(f"Direction inconnue : {reponse}")
 
@@ -354,9 +353,6 @@ class Analyseur:
             else:
                 return "droite"
 
-class Escadron(Drone):
-    def __init__(self):
-        pass
 
 ## DESIGN PATTERN
 
@@ -528,7 +524,8 @@ class MissionDrone:
         elif self.mode == "automatique":
             animation(self.drone)
         elif self.mode == "suivie_cote":
-            animation_suivie_cote(self.drone)
+            #animation_suivie_cote(self.drone)
+            raise ValueError("Mode de vol non existant.")
         else:
             raise ValueError("Mode de vol non reconnu.")
 
@@ -564,7 +561,7 @@ def animation(drone):
     pygame.quit()
 
 #Mode suivie de la côte
-def animation_suivie_cote(drone):
+'''def animation_suivie_cote(drone):
     def numpy_to_surface(array):
         return pygame.surfarray.make_surface(np.transpose(array, (1, 0, 2)))
 
@@ -591,7 +588,7 @@ def animation_suivie_cote(drone):
         if not continuer:
             running = False  # Stop si la carte est finie
 
-    pygame.quit()
+    pygame.quit()'''
 
 # Simulation
 if __name__ == "__main__":
@@ -604,7 +601,7 @@ if __name__ == "__main__":
     zone = (lat_min, lon_min, lat_max, lon_max)
 
     mission = MissionDrone() \
-        .set_mode("suivie_cote") \
+        .set_mode("manuel") \
         .set_altitude("moyenne") \
         .set_zone(zone) \
         .set_zoom(zoom) \
