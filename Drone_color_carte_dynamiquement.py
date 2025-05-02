@@ -246,26 +246,27 @@ class Drone:
         """
         analyseur = Analyseur(self.x, self.y, self.altitude)
         reponse = analyseur.next_direction(self.altitude, self.x, self.y, self.carte.image)
+        step = analyseur.taille_patch(self.altitude)
         if reponse == "bas":
-            self.y += 1
+            self.y += step
         elif reponse == "haut":
-            self.y -= 1
+            self.y -= step
         elif reponse == "gauche":
-            self.x -= 1
+            self.x -= step
         elif reponse == "droite":
-            self.x += 1
+            self.x += step
         elif reponse == "haut/gauche":
-            self.y -= 1
-            self.x -= 1
+            self.y -= step
+            self.x -= step
         elif reponse == "bas/gauche":
-            self.y += 1
-            self.x -= 1
+            self.y += step
+            self.x -= step
         elif reponse == "haut/droite":
-            self.y -= 1
-            self.x += 1
+            self.y -= step
+            self.x += step
         elif reponse == "bas/droite":
-            self.y += 1
-            self.x += 1
+            self.y += step
+            self.x += step
         else:
             print(f"Direction inconnue : {reponse}")
 
@@ -353,6 +354,9 @@ class Analyseur:
             else:
                 return "droite"
 
+class Escadron(Drone):
+    def __init__(self):
+        pass
 
 ## DESIGN PATTERN
 
@@ -524,7 +528,7 @@ class MissionDrone:
         elif self.mode == "automatique":
             animation(self.drone)
         elif self.mode == "suivie_cote":
-            self.drone.suivie_cote()
+            animation_suivie_cote(self.drone)
         else:
             raise ValueError("Mode de vol non reconnu.")
 
@@ -545,6 +549,36 @@ def animation(drone):
     running = True
     while running:
         continuer = drone.voler_un_pas()  # un seul pas par frame
+        surface = numpy_to_surface(carte.carte_blanche)
+        fenetre.blit(surface, (0, 0))
+        pygame.display.flip()
+        clock.tick(10)  # vitesse d’animation
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        if not continuer:
+            running = False  # Stop si la carte est finie
+
+    pygame.quit()
+
+#Mode suivie de la côte
+def animation_suivie_cote(drone):
+    def numpy_to_surface(array):
+        return pygame.surfarray.make_surface(np.transpose(array, (1, 0, 2)))
+
+    pygame.init()
+    carte = drone.carte
+    surface = numpy_to_surface(carte.carte_blanche)
+    largeur, hauteur = surface.get_size()
+    fenetre = pygame.display.set_mode((largeur, hauteur))
+    pygame.display.set_caption("Drone Cartographe")
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        continuer = drone.suivie_cote()  # suivre la côte
         surface = numpy_to_surface(carte.carte_blanche)
         fenetre.blit(surface, (0, 0))
         pygame.display.flip()
