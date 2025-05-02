@@ -28,7 +28,54 @@ class testAnalyseur (unittest.TestCase):
         # La moyenne doit être exactement (255, 0, 0)
         self.assertEqual(moyenne, (255, 0, 0))
 
+    def test_couleur_dominante_M(self):
+        patch=np.full((3,3,3),[0,0,255], dtype=np.uint8)
+        result=dccd.Analyseur.couleur_dominante(self,"basse",0,0,patch)
+        self.assertEqual(result,1)
 
+    def test_couleur_dominante_T(self):
+        patch=np.full((3,3,3),[255,0,0], dtype=np.uint8)
+        result=dccd.Analyseur.couleur_dominante(self,"basse",0,0,patch)
+        self.assertEqual(result,0)
+
+    def test_quatre_cadrans(self):
+        patch=np.arange(4*4*3).reshape((4,4,3))
+        cadran1,cadran2,cadran3,cadran4=dccd.Analyseur.quatre_cadrans(self,patch)
+        self.assertEqual(cadran1.shape,(2,2,3))
+        self.assertEqual(cadran2.shape,(2,2,3))
+        self.assertEqual(cadran3.shape,(2,2,3))
+        self.assertEqual(cadran4.shape,(2,2,3))
+
+    def test_next_direction(self):
+        image = np.zeros((5, 5, 3), dtype=np.uint8)
+        # Configuration plus claire : quadrants distincts
+        image[:2, :2] = [0, 0, 255]  # Bleu en haut à gauche
+        image[2:, 2:] = [0, 0, 255]  # Bleu en bas à droite
+        image[2:, :2] = [255, 0, 0]  # Rouge en bas à gauche
+        image[:2, 2:] = [255, 0, 0]  # Rouge en haut à droite
+        
+        analyseur = dccd.Analyseur(2, 2, "basse")
+        direction = analyseur.next_direction("basse", 2, 2, image)
+        
+        # Vérifier que la direction est valide
+        directions_valides = ["haut", "bas", "gauche", "droite","haut/gauche","bas/gauche","haut/droite","bas/droite"]
+        self.assertIn(direction, directions_valides)
+        
+        # Si vous êtes sûr que la direction doit être "droite"
+        self.assertEqual(direction, "droite")
+
+    # Tests unitaires dans le cas d'un drone qui analyse
+    def test_next_direction_unique_drone_maritime(self):
+        image = np.full((1, 1, 3), [0, 0, 255], dtype=np.uint8)  # patch 1x1 bleu
+        analyseur = dccd.Analyseur(1, 1, "basse")
+        direction = analyseur.next_direction("basse", 0, 0, image)
+        self.assertEqual(direction, "gauche")
+
+    def test_next_direction_unique_drone_terrestre(self):
+        image = np.full((1, 1, 3), [0, 255, 0], dtype=np.uint8)  # patch 1x1 vert
+        analyseur = dccd.Analyseur(1, 1, "basse")
+        direction = analyseur.next_direction("basse", 0, 0, image)
+        self.assertEqual(direction, "droite")
 
 class testCarte(unittest.TestCase) :
 

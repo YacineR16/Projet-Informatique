@@ -146,17 +146,9 @@ class Drone:
         self.carte = carte
         self.mode_vol=mode_vol
 
-#n'a pas fonctionné car fait tout direct au lieu de faire une apparition dynamique de la carte
-    """def vol_automatique(self):
-        traite toute la carte par déplacement avec balayage, ici forcément en commençant en (0,0) (voir le main)
-        analyseur = Analyseur(self.x, self.y, self.altitude)
-        step = analyseur.taille_patch(self.altitude)
-        while self.x < self.carte.image.shape[1]:
-            self.y=0
-            while self.y < self.carte.image.shape[0] :
-                self.carte.color_carte(self.x,self.y,self.altitude)
-                self.y+=step
-            self.x+=step"""
+    def voler(self):
+        self.mode_vol.voler(self)
+
 
     def voler_un_pas(self):
         """Fait une seule étape de coloration et avance"""
@@ -248,7 +240,7 @@ class Drone:
 
         pygame.quit()
 
-    def bouger_selon_la_cote(self):
+    def suivie_cote(self):
         """""
         Fonction permettant le suivi du littoral
         """
@@ -274,105 +266,117 @@ class Drone:
         elif reponse == "bas/droite":
             self.y += 1
             self.x += 1
-
+        else:
+            print(f"Direction inconnue : {reponse}")
 
 class Analyseur:
-    def __init__(self,x,y,altitude):
+    def __init__(self, x, y, altitude):
         self.x = x
         self.y = y
         self.altitude = altitude
 
-    def taille_patch(self,altitude):
+    def taille_patch(self, altitude):
         if altitude == "basse":
             return 5
-
         if altitude == "moyenne":
             return 15
-
         if altitude == "haute":
             return 30
 
-    def moyenne_RGB(self,altitude,x,y,image):
-        taille= self.taille_patch(altitude)
+    def moyenne_RGB(self, altitude, x, y, image):
+        taille = self.taille_patch(altitude)
         demi = taille // 2
-        patch = image[max(y - demi,0):min(y + demi+1,image.shape[0]), max(x - demi,0):min(x + demi+1,image.shape[1])]
-        moyenne = patch.mean(axis=(0, 1))  # moyenne des 25 pixels
+        patch = image[max(y - demi, 0):min(y + demi + 1, image.shape[0]),
+                      max(x - demi, 0):min(x + demi + 1, image.shape[1])]
+        moyenne = patch.mean(axis=(0, 1))  # moyenne des pixels
         couleur = tuple(moyenne.astype(int))  # arrondi en entier RGB
         return couleur
 
-    def couleur_dominante(self, altitude, x, y,
-                          image):  # Correction du code avec chatGPT parce que problème d'analyse de patch
+    def couleur_dominante(self, altitude, x, y, patch):
         maritime, terrestre = 0, 0
-        taille = self.taille_patch(altitude)
-        demi = taille // 2
-
-        # extrait le patch centré autour de (x, y)
-        patch = image[max(y - demi, 0):min(y + demi + 1, image.shape[0]),
-                max(x - demi, 0):min(x + demi + 1, image.shape[1])]
-
-        # parcours de chaque pixel du patch
         for i in range(patch.shape[0]):
             for j in range(patch.shape[1]):
                 r, g, b = patch[i, j]
-                if r < 100 and g < 100 and b > 200:
+                if r < 50 and g < 50 and b > 200:
                     maritime += 1
                 else:
                     terrestre += 1
-
         if maritime > terrestre:
             return 1
         else:
             return 0
 
-    def quatre_cadrans(self, patch, taille):
-        long_mid, large_mid = taille // 2, taille // 2
+    def quatre_cadrans(self, patch):
+        long_mid, large_mid = patch.shape[0] // 2, patch.shape[1] // 2
         cadran1 = patch[0:long_mid, 0:large_mid]
-        cadran2 = patch[0:long_mid, large_mid:taille]
-        cadran3 = patch[long_mid:taille, 0:large_mid]
-        cadran4 = patch[long_mid:taille, large_mid:taille]
+        cadran2 = patch[0:long_mid, large_mid:]
+        cadran3 = patch[long_mid:, 0:large_mid]
+        cadran4 = patch[long_mid:, large_mid:]
         return cadran1, cadran2, cadran3, cadran4
 
     def next_direction(self, altitude, x, y, image):
         taille = self.taille_patch(altitude)
         demi = taille // 2
         patch = image[max(y - demi, 0):min(y + demi + 1, image.shape[0]),
-                max(x - demi, 0):min(x + demi + 1, image.shape[1])]
-        cadran1, cadran2, cadran3, cadran4 = self.quatre_cadrans(patch, taille)
-        cas1 = self.couleur_dominante(altitude, x, y, cadran1)
-        cas2 = self.couleur_dominante(altitude, x, y, cadran2)
-        cas3 = self.couleur_dominante(altitude, x, y, cadran3)
-        cas4 = self.couleur_dominante(altitude, x, y, cadran4)
-        if cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 0:
-            return "droite"
-        elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 0:
-            return "bas"
-        elif cas1 == 0 and cas2 == 1 and cas3 == 1 and cas4 == 1:
-            return "haut/gauche"
-        elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 1:
-            return "bas/gauche"
-        elif cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 1:
-            return "haut/droite"
-        elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 0:
-            return "bas/droite"
-        elif cas1 == 0 and cas2 == 1 and cas3 == 0 and cas4 == 1:
-            return "haut"
-        elif (cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 1) or (
-                cas1 == 0 and cas2 == 0 and cas3 == 0 and cas4 == 0):
-            return "bas"
+                      max(x - demi, 0):min(x + demi + 1, image.shape[1])]
+
+        # Vérifier si le patch est suffisamment grand pour appliquer les cadrans
+        if patch.shape[0] >= 2 and patch.shape[1] >= 2:
+            cadran1, cadran2, cadran3, cadran4 = self.quatre_cadrans(patch)
+            cas1 = self.couleur_dominante(altitude, x, y, cadran1)
+            cas2 = self.couleur_dominante(altitude, x, y, cadran2)
+            cas3 = self.couleur_dominante(altitude, x, y, cadran3)
+            cas4 = self.couleur_dominante(altitude, x, y, cadran4)
+
+            if cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 0:
+                return "droite"
+            elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 0:
+                return "bas"
+            elif cas1 == 0 and cas2 == 1 and cas3 == 1 and cas4 == 1:
+                return "haut/gauche"
+            elif cas1 == 1 and cas2 == 0 and cas3 == 1 and cas4 == 1:
+                return "bas/gauche"
+            elif cas1 == 1 and cas2 == 1 and cas3 == 0 and cas4 == 1:
+                return "haut/droite"
+            elif cas1 == 1 and cas2 == 1 and cas3 == 1 and cas4 == 0:
+                return "bas/droite"
+            elif cas1 == 0 and cas2 == 1 and cas3 == 0 and cas4 == 1:
+                return "haut"
+            else:
+                return "bas"
+        else:
+            # Cas unique drone : on se base uniquement sur la moyenne RGB
+            couleur = self.moyenne_RGB(altitude, x, y, image)
+            r, g, b = couleur
+            if r < 100 and g < 100 and b > 200:
+                return "gauche"
+            else:
+                return "droite"
+
 
 ## DESIGN PATTERN
 
 class DroneFactory: #Creation du drone avec son mode de vol associé
     @staticmethod
     def creer_drone(type, x, y, altitude, carte, mode_vol):
-        if type == "Manuel":
-            return Drone(x, y, altitude, carte, "Manuel") #Normalement ce sera la class de Drone qui sera controlable manuellement
-        elif type == "Automatique":
-            return Drone(x, y, altitude, carte, "Automatique")
-        elif type == "Manuel Groupé":
-            pass #On mettra la classe qui permet de créer des groupes de drones en mode manuel
-        elif type== "Automatique Groupé":
-            pass #Respectivement pour le groupe de drone en mode automatique
+        if type == "manuel":
+            return Drone(x, y, altitude, carte, "manuel") #Normalement ce sera la class de Drone qui sera controlable manuellement
+        elif type == "automatique":
+            return Drone(x, y, altitude, carte, "automatique")
+        elif type == "suivie_cote":
+            return Drone(x, y, altitude, carte, "suivie_cote")
+
+class Mode_de_vol:
+    def voler(self, drone):
+        raise NotImplementedError
+
+class manuel(Mode_de_vol):
+    def voler(self, drone):
+        drone.vol_manuel()
+
+class Suivi_Cote(Mode_de_vol):
+    def voler(self, drone):
+        drone.bouger_selon_la_cote()
 
 # mise en place du DSL
 class MissionDrone:
@@ -450,7 +454,7 @@ class MissionDrone:
 
 
         elif self.mode == "manuel":
-            # enrionnement créé
+            # environnement créé
             lat_min, lon_min, lat_max, lon_max = self.zone
             self.env = Environnement(
                 lat_min=lat_min, lon_min=lon_min,
@@ -520,8 +524,7 @@ class MissionDrone:
         elif self.mode == "automatique":
             animation(self.drone)
         elif self.mode == "suivie_cote":
-            # Tu peux ajouter ici self.drone.suivre_cote() si tu l’implémentes plus tard
-            print("Mode 'suivie_cote' non encore implémenté.")
+            self.drone.suivie_cote()
         else:
             raise ValueError("Mode de vol non reconnu.")
 
@@ -567,7 +570,7 @@ if __name__ == "__main__":
     zone = (lat_min, lon_min, lat_max, lon_max)
 
     mission = MissionDrone() \
-        .set_mode("manuel") \
+        .set_mode("suivie_cote") \
         .set_altitude("moyenne") \
         .set_zone(zone) \
         .set_zoom(zoom) \
