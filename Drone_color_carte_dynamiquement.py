@@ -392,7 +392,7 @@ class automatique(Mode_de_vol):
         
 class Suivi_Cote(Mode_de_vol):
     def voler(self, drone):
-        drone.bouger_selon_la_cote()
+        drone.suivie_cote()
 
 # mise en place du DSL
 class MissionDrone:
