@@ -348,7 +348,7 @@ class Analyseur:
             # Cas unique drone : on se base uniquement sur la moyenne RGB
             couleur = self.moyenne_RGB(altitude, x, y, image)
             r, g, b = couleur
-            if r < 100 and g < 100 and b > 200:
+            if r < 50 and g < 50 and b > 200:
                 return "gauche"
             else:
                 return "droite"
