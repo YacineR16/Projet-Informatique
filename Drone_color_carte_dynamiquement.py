@@ -358,13 +358,12 @@ class Analyseur:
 
 class DroneFactory: #Creation du drone avec son mode de vol associé
     @staticmethod
-    def creer_drone(type, x, y, altitude, carte, mode_vol):
-        if type == "manuel":
-            return Drone(x, y, altitude, carte, "manuel") #Normalement ce sera la class de Drone qui sera controlable manuellement
-        elif type == "automatique":
-            return Drone(x, y, altitude, carte, "automatique")
-        elif type == "suivie_cote":
-            return Drone(x, y, altitude, carte, "suivie_cote")
+    def creer_drone(type, x, y, altitude, carte):
+        modes_dispo ={"automatique":automatique(), "manuel":manuel(), "suivie_cote":Suivi_Cote()}
+        if type not in modes_dispo:
+            raise ValueError(f"Type inconnu : {type}. Choix : {modes_dispo}")
+        else:
+            return Drone(x,y,altitude,carte,modes_dispo[type])
 
 class Mode_de_vol:
     def voler(self, drone):
@@ -374,6 +373,10 @@ class manuel(Mode_de_vol):
     def voler(self, drone):
         drone.vol_manuel()
 
+class automatique(Mode_de_vol):
+    def voler(self, drone):
+        animation(drone)
+        
 class Suivi_Cote(Mode_de_vol):
     def voler(self, drone):
         drone.bouger_selon_la_cote()
@@ -420,114 +423,44 @@ class MissionDrone:
 
 
     def preparer(self):
-        """Configure l'environnement de vol selon le mode choisi."""
+        if not all([self.mode, self.altitude, self.zone, self.zoom]):
+            raise ValueError("Paramètres de mission incomplets")
 
-        if self.mode == "automatique" and self.zone is not None:
-            # enrionnement créé
-            lat_min, lon_min, lat_max, lon_max = self.zone
-            self.env = Environnement(
-                lat_min=lat_min, lon_min=lon_min,
-                lat_max=lat_max, lon_max=lon_max,
-                zoom=self.zoom,
-                altitude=self.altitude,
-                mode_vol="automatique"
-            )
+        lat_min, lon_min, lat_max, lon_max = self.zone
+        
+        # Création de l'environnement
+        self.env = Environnement(
+            lat_min=lat_min, lon_min=lon_min,
+            lat_max=lat_max, lon_max=lon_max,
+            zoom=self.zoom,
+            altitude=self.altitude,
+            mode_vol=self.mode
+        )
 
-            # telechargement de la carte OSM
-            self.env.OSM()
+        # Téléchargement de la carte OSM
+        self.env.OSM()
+        self.env.enregistrer_mission()
 
-            # mission enregistrée dans la table mission
-            self.env.enregistrer_mission()
+        # Création de la carte
+        self.carte = Carte(
+            self.env.image_path,
+            self.env.lat_min, self.env.lat_max,
+            self.env.lon_min, self.env.lon_max,
+            self.env.zoom,
+            self.env.altitude,
+            self.mode
+        )
 
-            # créer la carte
-            self.carte = Carte(
-                self.env.image_path,
-                self.env.lat_min, self.env.lat_max,
-                self.env.lon_min, self.env.lon_max,
-                self.env.zoom,
-                self.env.altitude,
-                "automatique"
-            )
-
-            # créer le drone
-            self.drone = Drone(0, 0, self.altitude, self.carte, "automatique")
-
-
-        elif self.mode == "manuel":
-            # environnement créé
-            lat_min, lon_min, lat_max, lon_max = self.zone
-            self.env = Environnement(
-                lat_min=lat_min, lon_min=lon_min,
-                lat_max=lat_max, lon_max=lon_max,
-                zoom=self.zoom,
-                altitude=self.altitude,
-                mode_vol="manuel"
-            )
-
-            # telechargement de la carte OSM
-            self.env.OSM()
-
-            # mission enregistrée dans la table mission
-            self.env.enregistrer_mission()
-
-            # créer la carte
-            self.carte = Carte(
-                self.env.image_path,
-                self.env.lat_min, self.env.lat_max,
-                self.env.lon_min, self.env.lon_max,
-                self.env.zoom,
-                self.env.altitude,
-                "manuel"
-            )
-
-            # créer le drone
-            self.drone = Drone(0, 0, self.altitude, self.carte, "manuel")
-
-        elif self.mode == "suivie_cote":
-            # enrionnement créé
-            lat_min, lon_min, lat_max, lon_max = self.zone
-            self.env = Environnement(
-                lat_min=lat_min, lon_min=lon_min,
-                lat_max=lat_max, lon_max=lon_max,
-                zoom=self.zoom,
-                altitude=self.altitude,
-                mode_vol="suivie_cote"
-            )
-
-            # telechargement de la carte OSM
-            self.env.OSM()
-
-            # mission enregistrée dans la table mission
-            self.env.enregistrer_mission()
-
-            # créer la carte
-            self.carte = Carte(
-                self.env.image_path,
-                self.env.lat_min, self.env.lat_max,
-                self.env.lon_min, self.env.lon_max,
-                self.env.zoom,
-                self.env.altitude,
-                "suivie_cote"
-            )
-
-            # créer le drone
-            self.drone = Drone(0, 0, self.altitude, self.carte, "manuel")
-
-        else:
-            raise ValueError("Mode inconnu ou informations incomplètes.")
-
+        # Création du drone via la factory
+        self.drone = DroneFactory.creer_drone(
+            self.mode, 0, 0, self.altitude, self.carte)
+        
         return self
 
     def executer(self):
-        if (self.mode == "manuel"):
-            self.drone.vol_manuel()
-        elif self.mode == "automatique":
-            animation(self.drone)
-        elif self.mode == "suivie_cote":
-            #animation_suivie_cote(self.drone)
-            raise ValueError("Mode de vol non existant.")
-        else:
-            raise ValueError("Mode de vol non reconnu.")
+        if not self.drone:
+            raise ValueError("Mission non préparée")
+        self.drone.voler()
 
 
 # animation pygame pour l'automatique
@@ -600,18 +533,20 @@ if __name__ == "__main__":
     zoom = 17
     zone = (lat_min, lon_min, lat_max, lon_max)
 
-    mission = MissionDrone() \
-        .set_mode("manuel") \
-        .set_altitude("moyenne") \
-        .set_zone(zone) \
-        .set_zoom(zoom) \
-        .preparer() \
+    try:
+        mission = MissionDrone() \
+            .set_mode("manuel") \
+            .set_altitude("moyenne") \
+            .set_zone(zone) \
+            .set_zoom(zoom) \
+            .preparer() \
+            .executer()
 
-    mission.executer()
+        # Sauvegarde carte finale
+        mission.carte.sauvegarder_image_finale("carte_coloree_manuel.png")
 
-    # Sauvegarde carte finale
-    mission.carte.sauvegarder_image_finale("carte_coloree_manuel.png")
-
-    # Lecture BDD
-    SQL.lire_donnees("SELECT * FROM Cartes")
-    SQL.lire_donnees("SELECT * FROM Pixels")
+        # Lecture BDD
+        SQL.lire_donnees("SELECT * FROM Cartes")
+        SQL.lire_donnees("SELECT * FROM Pixels")
+    except ValueError as e:
+        print(f"Erreur lors de l'exécution de la mission : {e}")
