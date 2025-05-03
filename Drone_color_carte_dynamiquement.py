@@ -353,9 +353,13 @@ class Analyseur:
             else:
                 return "droite"
 
-
+class Escadron(Drone):
+    def __init__(self,x,y,altitude,carte,mode_vol,nb_drone):
+        for i in range(nb_drone//2):
+            Drone.__init__(self,x+i,y,altitude,carte,mode_vol)
+            Drone.__init__(self,x,y+i,altitude,carte,mode_vol)
 ## DESIGN PATTERN
-
+#Factory
 class DroneFactory: #Creation du drone avec son mode de vol associé
     @staticmethod
     def creer_drone(type, x, y, altitude, carte):
@@ -365,6 +369,7 @@ class DroneFactory: #Creation du drone avec son mode de vol associé
         else:
             return Drone(x,y,altitude,carte,modes_dispo[type])
 
+#Strategy
 class Mode_de_vol:
     def voler(self, drone):
         raise NotImplementedError
