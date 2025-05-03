@@ -269,6 +269,19 @@ class Drone:
         else:
             print(f"Direction inconnue : {reponse}")
 
+
+class Escadron(Drone):
+    def __init__(self, x, y, altitude, carte, mode_vol, nb_drone):
+        self.escadron = [Drone(x + i, y, altitude, carte, mode_vol) for i in range(nb_drone // 2)]
+        for i in range(nb_drone // 2):
+            self.escadron.append(Drone(x, y + i, altitude, carte, mode_vol))
+
+    def voler(self):
+        for drone in self.escadron:
+            drone.voler()
+
+
+
 class Analyseur:
     def __init__(self, x, y, altitude):
         self.x = x
@@ -353,11 +366,6 @@ class Analyseur:
             else:
                 return "droite"
 
-class Escadron(Drone):
-    def __init__(self,x,y,altitude,carte,mode_vol,nb_drone):
-        for i in range(nb_drone//2):
-            Drone.__init__(self,x+i,y,altitude,carte,mode_vol)
-            Drone.__init__(self,x,y+i,altitude,carte,mode_vol)
 ## DESIGN PATTERN
 #Factory
 class DroneFactory: #Creation du drone avec son mode de vol associé
