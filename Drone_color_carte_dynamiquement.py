@@ -506,35 +506,6 @@ def animation(drone):
 
     pygame.quit()
 
-#Mode suivie de la côte
-'''def animation_suivie_cote(drone):
-    def numpy_to_surface(array):
-        return pygame.surfarray.make_surface(np.transpose(array, (1, 0, 2)))
-
-    pygame.init()
-    carte = drone.carte
-    surface = numpy_to_surface(carte.carte_blanche)
-    largeur, hauteur = surface.get_size()
-    fenetre = pygame.display.set_mode((largeur, hauteur))
-    pygame.display.set_caption("Drone Cartographe")
-    clock = pygame.time.Clock()
-
-    running = True
-    while running:
-        continuer = drone.suivie_cote()  # suivre la côte
-        surface = numpy_to_surface(carte.carte_blanche)
-        fenetre.blit(surface, (0, 0))
-        pygame.display.flip()
-        clock.tick(10)  # vitesse d’animation
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        if not continuer:
-            running = False  # Stop si la carte est finie
-
-    pygame.quit()'''
 
 # Simulation
 if __name__ == "__main__":
@@ -555,8 +526,11 @@ if __name__ == "__main__":
             .preparer() \
             .executer()
 
-        # Sauvegarde carte finale
-        mission.carte.sauvegarder_image_finale("carte_coloree_manuel.png")
+        # Récupérer la carte depuis la mission et sauvegarder
+        if hasattr(mission, 'carte'):
+            mission.carte.sauvegarder_image_finale("carte_coloree_manuel.png")
+        else:
+            print("Erreur : Aucune carte n'a été créée pendant la mission")
 
         # Lecture BDD
         SQL.lire_donnees("SELECT * FROM Cartes")
