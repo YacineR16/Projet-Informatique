@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Interface</class>
+ <widget class="QMainWindow" name="Interface">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1116</width>
+    <height>707</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Cartographie par drones</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>60</y>
+      <width>931</width>
+      <height>431</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="Depart">
+    <property name="geometry">
+     <rect>
+      <x>920</x>
+      <y>600</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>GO !</string>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="ChoixVol">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>550</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="contextMenuPolicy">
+     <enum>Qt::ActionsContextMenu</enum>
+    </property>
+    <property name="acceptDrops">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string>Mode de vol</string>
+    </property>
+    <property name="popupMode">
+     <enum>QToolButton::MenuButtonPopup</enum>
+    </property>
+    <property name="autoRaise">
+     <bool>false</bool>
+    </property>
+    <property name="arrowType">
+     <enum>Qt::NoArrow</enum>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="ChoixAltitude">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>600</y>
+      <width>110</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Altitude</string>
+    </property>
+    <property name="popupMode">
+     <enum>QToolButton::MenuButtonPopup</enum>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="ChoixDrones">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>550</y>
+      <width>150</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Nombre de drones</string>
+    </property>
+    <property name="popupMode">
+     <enum>QToolButton::MenuButtonPopup</enum>
+    </property>
+   </widget>
+   <widget class="QToolButton" name="ChoixCarte">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>600</y>
+      <width>150</width>
+      <height>30</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Carte choisie</string>
+    </property>
+    <property name="popupMode">
+     <enum>QToolButton::MenuButtonPopup</enum>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1116</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFichier">
+    <property name="title">
+     <string>Fichier</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="actionQuitter"/>
+   </widget>
+   <addaction name="menuFichier"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionQuitter">
+   <property name="text">
+    <string>Quitter</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
